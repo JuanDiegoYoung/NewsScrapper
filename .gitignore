@@ -1,5 +1,9 @@
 mlops_venv/
+package/
 __pycache__/
 *.zip
 *.json
 *.log
+out.json
+deployed.zip
+deployed_code/
