@@ -5,7 +5,7 @@ from dateutil import parser as dateparser
 from bs4 import BeautifulSoup
 import boto3
 from logger_utils import get_logger
-
+from save_bucket import upload_results_to_s3
 
 logger = get_logger(name="scraper")
 ses = boto3.client("ses", region_name="us-east-1")
@@ -176,19 +176,29 @@ def lambda_handler(event, context):
     logger.info("lambda.start", extra={"request_id": request_id})
     try:
         results = run_once(top_n=5)
+
         outpath = "/tmp/scraped_summaries.jsonl"
         with open(outpath, "a", encoding="utf-8") as f:
             for r in results:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
         send_email(
             subject="Resultado ejecución Lambda finance-news-scraper",
             body=json.dumps(results, ensure_ascii=False, indent=2)
         )
+
+        ok = upload_results_to_s3(results, request_id)
+        if ok:
+            logger.info("s3.success", extra={"request_id": request_id})
+        else:
+            logger.warning("s3.not_saved", extra={"request_id": request_id})
+
         logger.info("lambda.success", extra={"request_id": request_id, "n_results": len(results)})
         return {"statusCode": 200, "body": results}
     except Exception:
         logger.exception("lambda.failure", extra={"request_id": request_id})
         return {"statusCode": 500, "body": "internal error"}
+
 
 if __name__ == "__main__":
     results = run_once(top_n=5)
