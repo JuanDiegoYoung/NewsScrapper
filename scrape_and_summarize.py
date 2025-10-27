@@ -1,11 +1,11 @@
 # scrape_and_summarize.py — RSS → HTML → OpenAI (local y Lambda)
-from IPython.display import clear_output
+
 import os, time, hashlib, json, requests, feedparser
 from dateutil import parser as dateparser
 from bs4 import BeautifulSoup
 import boto3
 from logger_utils import get_logger
-from rss_utils import fetch_rss
+
 
 logger = get_logger(name="scraper")
 ses = boto3.client("ses", region_name="us-east-1")
@@ -114,6 +114,27 @@ def summarize_with_openai(title, url, body):
     except Exception as e:
         logger.exception("openai.error", extra={"title": title[:80]})
         return f"ERROR: {e}"
+    
+
+def fetch_rss(url):
+    d = feedparser.parse(url)
+    out = []
+    for e in d.entries:
+        link = e.get("link") or e.get("id") or ""
+        title = (e.get("title") or "").strip()
+        summary = (e.get("summary") or e.get("description") or "").strip()
+        published = None
+        for k in ("published", "updated", "pubDate"):
+            if e.get(k):
+                try:
+                    published = dateparser.parse(e.get(k)).isoformat()
+                except Exception:
+                    published = e.get(k)
+                break
+        uid = hashlib.sha1((link + title).encode()).hexdigest()
+        out.append({"uid": uid, "title": title, "summary": summary, "link": link, "published": published, "_source": url})
+    return out
+
 
 def dedupe(entries):
     seen = set()
