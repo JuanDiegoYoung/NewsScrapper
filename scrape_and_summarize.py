@@ -1,6 +1,6 @@
 # scrape_and_summarize.py — RSS → HTML → OpenAI (local y Lambda)
 
-import os, time, hashlib, json, requests, feedparser
+import os, time, hashlib, json, requests, feedparser, random
 from dateutil import parser as dateparser
 from bs4 import BeautifulSoup
 import boto3
@@ -21,6 +21,24 @@ def get_openai_api_key():
     return os.getenv("OPENAI_API_KEY", "")
 
 API_KEY = get_openai_api_key()
+
+# --- Backoff exponencial con jitter ---
+def _backoff(try_idx, base=0.5, cap=6.0):
+    return min(cap, base * (2 ** try_idx)) * (0.5 + random.random())
+
+def http_retry(call, tries=4, label="http"):
+    last = None
+    for i in range(tries):
+        try:
+            return call()
+        except requests.RequestException as e:
+            last = e
+            # 4xx no-retriables (salvo 408/429): cortar
+            status = getattr(e.response, "status_code", None)
+            if status and status < 500 and status not in (408, 409, 425, 429):
+                raise
+            time.sleep(_backoff(i))
+    raise last
 
 RSS_FEEDS = [
     "https://www.cnbc.com/id/100003114/device/rss/rss.html",
@@ -49,12 +67,13 @@ def send_email(subject, body, recipient="young.juandiego@gmail.com"):
 def fetch_article_text(url, timeout=25):
     logger.info("fetch_article.start", extra={"url": url})
     try:
-        r = requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
+        r = http_retry(lambda: requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"}), label="requests.get")
         r.raise_for_status()
     except Exception:
         logger.exception("fetch_article.request_error", extra={"url": url})
         return ""
     try:
+        from bs4 import BeautifulSoup
         soup = BeautifulSoup(r.text, "html.parser")
         for sel in ["article", "main", "div#main-content", "div.article__content", "div#content"]:
             node = soup.select_one(sel)
@@ -69,6 +88,7 @@ def fetch_article_text(url, timeout=25):
     except Exception:
         logger.exception("fetch_article.parse_error", extra={"url": url})
         return ""
+
 
 def robust_openai_extract(j):
     if isinstance(j, dict):
@@ -111,18 +131,29 @@ def summarize_with_openai(title, url, body):
     }
     t0 = time.time()
     try:
-        r = requests.post(OPENAI_URL, headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}, json=payload, timeout=40)
-        r.raise_for_status()
+        def _post():
+            r = requests.post(
+                OPENAI_URL,
+                headers={"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"},
+                json=payload,
+                timeout=40
+            )
+            # Retriable: 429 / 5xx
+            if r.status_code in (429,) or 500 <= r.status_code < 600:
+                raise requests.HTTPError(response=r)
+            r.raise_for_status()
+            return r
+        r = http_retry(_post, label="openai.post")
         j = r.json()
         text = robust_openai_extract(j)
         logger.info("openai.ok", extra={"latency_s": round(time.time() - t0, 3), "title": title[:80]})
         return text if text.strip() else f"(respuesta cruda)\n{j}"
     except requests.HTTPError as e:
         logger.exception("openai.http_error", extra={"status": getattr(e.response, "status_code", None), "title": title[:80]})
-        return f"ERROR HTTP {e.response.status_code}: {e.response.text[:400]}"
-    except Exception as e:
+        return f"ERROR HTTP {getattr(e.response,'status_code',None)}: {getattr(e.response,'text','')[:400]}"
+    except Exception:
         logger.exception("openai.error", extra={"title": title[:80]})
-        return f"ERROR: {e}"
+        return "ERROR: fallo al llamar a OpenAI"
     
 
 def fetch_rss(url):
