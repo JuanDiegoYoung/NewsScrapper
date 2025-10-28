@@ -1,5 +1,4 @@
 # ===== save_bucket.py =====
-from IPython.display import clear_output
 import os, io, json, datetime
 import boto3
 from logger_utils import logger  # reutilizamos el logger global

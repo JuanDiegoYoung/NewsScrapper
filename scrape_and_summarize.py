@@ -11,7 +11,16 @@ logger = get_logger(name="scraper")
 ses = boto3.client("ses", region_name="us-east-1")
 
 OPENAI_URL = "https://api.openai.com/v1/responses"
-API_KEY = os.environ.get("OPENAI_API_KEY") or ""
+
+def get_openai_api_key():
+    name = os.getenv("OPENAI_SECRET")
+    if name:
+        sm = boto3.client("secretsmanager", region_name=os.getenv("AWS_REGION","us-east-1"))
+        secret_str = sm.get_secret_value(SecretId=name)["SecretString"]
+        return json.loads(secret_str)["OPENAI_API_KEY"]
+    return os.getenv("OPENAI_API_KEY", "")
+
+API_KEY = get_openai_api_key()
 
 RSS_FEEDS = [
     "https://www.cnbc.com/id/100003114/device/rss/rss.html",
