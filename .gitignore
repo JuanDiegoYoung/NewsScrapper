@@ -4,6 +4,12 @@ __pycache__/
 *.zip
 *.json
 *.log
+*.sh
+*.ps1
+*.pem
+*.json
+*.jsonl
+*.csv
 out.json
 deployed.zip
 deployed_code/
