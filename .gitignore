@@ -13,4 +13,4 @@ __pycache__/
 out.json
 deployed.zip
 deployed_code/
-tmp_unzip/
+tmp_unzip/scraped_summaries.jsonl
