@@ -4,7 +4,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-st.title("Dashboard de Noticias — v2")
+st.title("Dashboard de Noticias — CI/CD OK")
 
 def load_data():
     try:
