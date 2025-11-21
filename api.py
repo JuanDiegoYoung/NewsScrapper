@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
@@ -11,6 +11,27 @@ PREFIX = "runs/"
 
 s3 = boto3.client("s3")
 
+# =========================
+#  Cargar API key desde Secrets Manager
+# =========================
+SECRET_NAME = "newscrapper-api-secret"
+REGION = "us-east-1"
+
+def load_api_key():
+    sm = boto3.client("secretsmanager", region_name=REGION)
+    raw = sm.get_secret_value(SecretId=SECRET_NAME)["SecretString"]
+    data = json.loads(raw)
+    return data["FINANCE_API_KEY"]
+
+API_KEY = load_api_key()
+
+def verify_key(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+# =========================
+#  Funciones internas
+# =========================
 def list_dates():
     resp = s3.list_objects_v2(Bucket=BUCKET, Prefix=PREFIX, Delimiter="/")
     prefixes = resp.get("CommonPrefixes", [])
@@ -56,6 +77,10 @@ def list_rss_feeds():
         "https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best"
     ]
 
+
+# =========================
+#  FastAPI
+# =========================
 app = FastAPI()
 
 app.add_middleware(
@@ -66,7 +91,7 @@ app.add_middleware(
 )
 
 @app.get("/resumen/latest")
-def endpoint_latest():
+def endpoint_latest(auth=Depends(verify_key)):
     fecha = get_latest_date()
     if not fecha:
         raise HTTPException(404, "No hay fechas en S3")
@@ -77,7 +102,7 @@ def endpoint_latest():
     return JSONResponse({"fecha": fecha, "articulos": datos})
 
 @app.get("/resumen/{fecha}")
-def endpoint_fecha(fecha: str):
+def endpoint_fecha(fecha: str, auth=Depends(verify_key)):
     try:
         datetime.strptime(fecha, "%Y-%m-%d")
     except:
@@ -89,7 +114,7 @@ def endpoint_fecha(fecha: str):
     return JSONResponse({"fecha": fecha, "articulos": datos})
 
 @app.get("/historico")
-def endpoint_historico():
+def endpoint_historico(auth=Depends(verify_key)):
     fechas = list_dates()
     master = {}
     for f in fechas:
@@ -99,11 +124,11 @@ def endpoint_historico():
     return JSONResponse(master)
 
 @app.get("/rss/list")
-def endpoint_rss():
+def endpoint_rss(auth=Depends(verify_key)):
     return JSONResponse(list_rss_feeds())
 
 @app.post("/forzar-scrape")
-def endpoint_forzar_scrape():
+def endpoint_forzar_scrape(auth=Depends(verify_key)):
     try:
         run_scraper()
         return JSONResponse({"status": "ok"})
@@ -111,5 +136,5 @@ def endpoint_forzar_scrape():
         raise HTTPException(500, str(e))
 
 @app.get("/")
-def root():
+def root(auth=Depends(verify_key)):
     return {"status": "ok", "message": "FinanceNews API activa"}
