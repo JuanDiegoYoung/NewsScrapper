@@ -14,3 +14,6 @@ urllib3==2.5.0
 boto3
 plotly
 wordcloud
+fastapi
+uvicorn
+boto3
