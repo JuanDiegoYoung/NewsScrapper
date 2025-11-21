@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import boto3
 import json
-from IPython.display import clear_output
 from scrape_and_summarize import run as run_scraper
 
 BUCKET = "jd-finance-news"
