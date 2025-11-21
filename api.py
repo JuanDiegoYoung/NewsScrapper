@@ -21,7 +21,7 @@ def load_api_key():
     sm = boto3.client("secretsmanager", region_name=REGION)
     raw = sm.get_secret_value(SecretId=SECRET_NAME)["SecretString"]
     data = json.loads(raw)
-    return data["FINANCE_API_KEY"]
+    return data["NEWSCRAPPER-API-KEY"]
 
 API_KEY = load_api_key()
 
