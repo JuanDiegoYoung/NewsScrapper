@@ -5,9 +5,7 @@ from datetime import datetime
 import boto3
 import json
 from scrape_and_summarize import run_once as run_scraper
-
-BUCKET = "jd-finance-news"
-PREFIX = "runs/"
+from config import BUCKET, PREFIX
 
 s3 = boto3.client("s3")
 
