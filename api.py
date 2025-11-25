@@ -5,15 +5,13 @@ from datetime import datetime
 import boto3
 import json
 from scrape_and_summarize import run_once as run_scraper
-from config import BUCKET, PREFIX
+from config import BUCKET, PREFIX, SECRET_NAME, REGION
 
 s3 = boto3.client("s3")
 
 # =========================
 #  Cargar API key desde Secrets Manager
 # =========================
-SECRET_NAME = "newscrapper-api-secret"
-REGION = "us-east-1"
 
 def load_api_key():
     sm = boto3.client("secretsmanager", region_name=REGION)
