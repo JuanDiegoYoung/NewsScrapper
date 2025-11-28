@@ -16,3 +16,4 @@ deployed_code
 .DS_Store
 venv/
 test_athena.py
+debug.yaml
