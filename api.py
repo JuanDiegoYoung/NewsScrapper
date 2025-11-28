@@ -134,3 +134,13 @@ def endpoint_forzar_scrape(auth=Depends(verify_key)):
 @app.get("/")
 def root(auth=Depends(verify_key)):
     return {"status": "ok", "message": "FinanceNews API activa"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "api:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False
+    )
