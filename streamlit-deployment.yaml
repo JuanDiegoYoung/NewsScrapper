@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: news-streamlit
+  labels:
+    app: news-streamlit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: news-streamlit
+  template:
+    metadata:
+      labels:
+        app: news-streamlit
+    spec:
+      containers:
+      - name: news-streamlit
+        image: 332504859187.dkr.ecr.us-east-1.amazonaws.com/news_streamlit:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8501
