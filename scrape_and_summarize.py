@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import boto3
 from logger_utils import get_logger
 from save_bucket import upload_results_to_s3
+import uuid
 
 logger = get_logger(name="scraper")
 ses = boto3.client("ses", region_name="us-east-1")
@@ -186,6 +187,7 @@ def dedupe(entries):
         out.append(e)
     return out
 
+
 def run_once(top_n=5):
     logger.info("run_once.start", extra={"top_n": top_n, "feeds": len(RSS_FEEDS)})
     all_entries = []
@@ -197,18 +199,31 @@ def run_once(top_n=5):
         except Exception:
             logger.exception("fetch_rss.error", extra={"feed": feed})
         time.sleep(0.2)
+
     all_entries = dedupe(all_entries)
     all_entries.sort(key=lambda x: x.get("published") or "", reverse=True)
     top = all_entries[:top_n]
+
     results = []
     for e in top:
         logger.info("summarize.start", extra={"uid": e["uid"], "title": e["title"][:80], "link": e["link"]})
         body = fetch_article_text(e["link"]) or e["summary"]
         summary = summarize_with_openai(e["title"], e["link"], body)
-        results.append({"title": e["title"], "link": e["link"], "published": e.get("published"), "summary": summary})
+        results.append({
+            "title": e["title"],
+            "link": e["link"],
+            "published": e.get("published"),
+            "summary": summary
+        })
         logger.info("summarize.done", extra={"uid": e["uid"], "summary_len": len(summary)})
         time.sleep(0.3)
+
     logger.info("run_once.done", extra={"n_results": len(results)})
+
+    # NUEVO
+    run_id = uuid.uuid4().hex
+    upload_results_to_s3(results, run_id)
+
     return results
 
 def lambda_handler(event, context):
