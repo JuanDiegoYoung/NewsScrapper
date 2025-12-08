@@ -1,6 +1,19 @@
 # NewsScrapper
 
-Sistema de scraping y análisis de noticias con API, dashboard Streamlit y despliegue en Kubernetes.
+Sistema de scraping y análisis de noticias financieras con API, dashboard Streamlit y despliegue en Kubernetes.
+
+## Key Features
+
+- **News scraper** para fuentes financieras
+- **Resumen automático** usando modelos de lenguaje
+- **Email reporting** con los insights más relevantes
+- **API completa** para acceso en tiempo real
+- **Completamente dockerizado** para deployment reproducible
+- **Almacenamiento S3** para artículos, logs y outputs
+- **Ejecución recurrente** mediante scheduled jobs
+- **Dashboard Streamlit** para monitoreo y análisis
+- **Integración continua** para testing y deployments
+- **Control de tráfico** via load balancer y reglas de acceso
 
 ## 📁 Estructura del Proyecto
 
