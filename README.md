@@ -162,7 +162,7 @@ Ver [API_USAGE_GUIDE.md](docs/API_USAGE_GUIDE.md) para más detalles sobre el us
 # Ejecutar todos los tests
 pytest tests/
 
-# Test específico
+# Test particular
 python tests/scrape_test.py
 ```
 
