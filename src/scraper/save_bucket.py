@@ -1,8 +1,11 @@
 # ===== save_bucket.py =====
 import os, io, json, datetime
 import boto3
-from logger_utils import logger  # reutilizamos el logger global
-from config import BUCKET as S3_BUCKET, PREFIX as S3_PREFIX
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.logger_utils import logger  # reutilizamos el logger global
+from config.config import BUCKET as S3_BUCKET, PREFIX as S3_PREFIX
 
 s3 = boto3.client("s3")
 

@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY config/requirements.txt .
+COPY config/requirements_api.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements_api.txt
+
+COPY src/ ./src/
+COPY config/ ./config/
+
+ENV PYTHONPATH=/app
+
+CMD ["python3", "-u", "-m", "uvicorn", "src.api.api:app", "--host", "0.0.0.0", "--port", "8000"]

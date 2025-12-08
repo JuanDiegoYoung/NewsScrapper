@@ -1,19 +1,43 @@
-mlops_venv/
-package/
+# Python
 __pycache__/
-*.zip
-*.json
-*.log
-*.sh
-*.ps1
-*.pem
-*.json
-*.jsonl
-*.csv
-out.json
-deployed.zip
-deployed_code
-.DS_Store
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
-test_athena.py
-debug.yaml
+mlops_venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Packages
+*.zip
+package/
+deployed.zip
+deployed_code/
+lambda_package.zip
+
+# Data files (comentar si quieres versionar los datos)
+data/*.json
+data/*.jsonl
+data/*.csv
+*.log
+
+# Secrets y credenciales
+*.pem
+.env
+.env.local
+
+# Temporales
+out.json
+*.tmp
+
+# Kubernetes debug
+# kubernetes/debug.yaml

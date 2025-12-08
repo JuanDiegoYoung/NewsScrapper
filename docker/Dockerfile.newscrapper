@@ -6,9 +6,13 @@ RUN apt-get update && \
     apt-get install -y gcc libfreetype6-dev && \
     apt-get clean
 
-COPY requirements.txt .
+COPY config/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY src/ ./src/
+COPY config/ ./config/
+COPY data/ ./data/
 
-CMD ["python", "scrape_and_summarize.py"]
+ENV PYTHONPATH=/app
+
+CMD ["python", "-m", "src.scraper.scrape_and_summarize"]

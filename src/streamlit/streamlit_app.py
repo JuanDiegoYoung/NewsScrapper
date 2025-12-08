@@ -8,7 +8,9 @@ st.title("Dashboard de Noticias — CI/CD OK")
 
 def load_data():
     try:
-        return pd.read_json("scraped_summaries.jsonl", lines=True)
+        import os
+        data_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "scraped_summaries.jsonl")
+        return pd.read_json(data_path, lines=True)
     except Exception as e:
         st.error(f"Error al cargar el archivo: {e}")
         return None

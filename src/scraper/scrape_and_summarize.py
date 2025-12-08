@@ -4,8 +4,11 @@ import os, time, hashlib, json, requests, feedparser, random
 from dateutil import parser as dateparser
 from bs4 import BeautifulSoup
 import boto3
-from logger_utils import get_logger
-from save_bucket import upload_results_to_s3
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.logger_utils import get_logger
+from src.scraper.save_bucket import upload_results_to_s3
 import uuid
 
 logger = get_logger(name="scraper")

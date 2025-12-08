@@ -4,8 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 import boto3
 import json
-from scrape_and_summarize import run_once as run_scraper
-from config import BUCKET, PREFIX, SECRET_NAME, REGION
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from src.scraper.scrape_and_summarize import run_once as run_scraper
+from config.config import BUCKET, PREFIX, SECRET_NAME, REGION
 
 s3 = boto3.client("s3")
 

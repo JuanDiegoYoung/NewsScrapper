@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: manual-debug
+spec:
+  template:
+    spec:
+      serviceAccountName: scraper-sa
+      restartPolicy: Never
+      containers:
+      - name: debug
+        image: 332504859187.dkr.ecr.us-east-1.amazonaws.com/news_scraper:v1
+        command: ["/bin/bash", "-c", "sleep 999999"]
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: key
